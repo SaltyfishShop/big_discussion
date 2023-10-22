@@ -1,0 +1,37 @@
+name: Process Discussion Comment
+
+on:
+  discussion_comment:
+    types: [created, edited, deleted]
+
+jobs:
+  process_comment:
+    runs-on: ubuntu-latest
+    if: github.event.discussion.id == 4825024 && github.event.comment.parent_id == ''
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install PyGithub requests
+
+    - name: Process Comment
+      if: env.SKIP_STEPS != 'true'
+      env:
+        DISCUSSION_ID: ${{ github.event.discussion.id }}
+        COMMENT_ID: ${{ github.event.comment.id }}
+        EVENT_NAME: ${{ github.event.action }}
+        COMMENT_CONTENT: ${{ github.event.comment.body }}
+        COMMENT_LINK: https://github.com/${{ github.repository }}/discussions/5#discussioncomment-${{ github.event.comment.id }}
+        PIPELINE_RUN_LINK: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        INTRO_TOKEN: ${{ secrets.INTRO_TOKEN }}
+      run: |
+        git clone https://${{ secrets.INTRO_TOKEN }}@github.com/SaltyfishShop/Introduce-Yourself.git
+        cd Introduce-Yourself
+        python -u ../.github/scripts/intro.py
