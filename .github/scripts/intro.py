@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime
 
@@ -45,6 +46,14 @@ else:
 logger.info(f"file_found: {file_found}, file_path: {file_path}, ACTION_TYPE = {ACTION_TYPE}")
 
 try:
+    if ACTION_TYPE == "created" or ACTION_TYPE == "edited":
+        if not COMMENT_CONTENT.startswith("###"):
+            raise ValueError("内容应当以三级标题 `###` 开头。请修改你的评论。")
+        if re.search(r'\n#{1,3}\s', COMMENT_CONTENT[3:]):
+            raise ValueError("内容中不应包含三级和三级以上的标题。请修改你的评论。")
+        if "\n---" in COMMENT_CONTENT:
+            raise ValueError("内容中不应包含分页符。请修改你的评论。")
+
     if ACTION_TYPE == "created" or (ACTION_TYPE == "edited" and not file_found):
         current_time = datetime.utcnow().isoformat() + "Z"
         content_data = {
